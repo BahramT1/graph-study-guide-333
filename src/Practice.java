@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +28,27 @@ public class Practice {
    * @return the number of vertices with odd values reachable from the starting vertex
    */
   public static int oddVertices(Vertex<Integer> starting) {
-    return 0;
+    Set<Vertex<Integer>> set = new HashSet<>();
+    return oddVerticesHelper(starting, set);
+  }
+
+  public static int oddVerticesHelper(Vertex<Integer> starting, Set<Vertex<Integer>> visited){
+    if(starting == null) return 0;
+    if(visited.contains(starting)) return 0;
+
+    visited.add(starting);
+
+    int count = 0;
+    if(starting.data % 2 != 0){
+      count = 1;
+    }
+    if(starting.neighbors != null){
+      for(Vertex<Integer> neighbor : starting.neighbors){
+        count += oddVerticesHelper(neighbor, visited);
+      }
+    }
+
+    return count;
   }
 
   /**
@@ -48,8 +71,33 @@ public class Practice {
    */
   public static List<Integer> sortedReachable(Vertex<Integer> starting) {
     // Unimplemented: perform a depth-first search and sort the collected values.
-    return null;
+    Set<Vertex<Integer>> set = new HashSet<>();
+    List<Integer> result = sortedReachableHelper(starting, set);
+    Collections.sort(result);
+
+    return result;
   }
+
+  public static List<Integer> sortedReachableHelper(Vertex<Integer>starting, Set<Vertex<Integer>> visited) {
+    if(starting == null) return Collections.emptyList();
+    if(visited.contains(starting)) return Collections.emptyList();
+
+    visited.add(starting);
+
+    List<Integer> values = new ArrayList<>();
+    values.add(starting.data);
+  
+    if(starting.neighbors != null){
+      for(var neighbor : starting.neighbors){
+  
+        values.addAll(sortedReachableHelper(neighbor, visited));
+      }
+  
+      
+    }
+    return values;
+  }
+
 
   /**
    * Returns a sorted list of all values reachable from the given starting vertex in the provided graph.
@@ -62,8 +110,33 @@ public class Practice {
    * @return a sorted list of all reachable vertex values
    */
   public static List<Integer> sortedReachable(Map<Integer, Set<Integer>> graph, int starting) {
-    return null;
+    Set<Integer> set = new HashSet<>();
+    List<Integer> result = sortedReachableHelper(graph, starting, set);
+    Collections.sort(result);
+    return result;
   }
+
+  public static List<Integer> sortedReachableHelper(Map<Integer, Set<Integer>> graph, int starting, Set<Integer> visited){
+    if(graph == null) return Collections.emptyList();
+    if(!graph.containsKey(starting)) return Collections.emptyList();
+    if(visited.contains(starting))return Collections.emptyList();
+
+    visited.add(starting);
+
+    List<Integer> values = new ArrayList<>();
+    values.add(starting);
+
+    // Retrieve neighbors from the graph.
+    Set<Integer> neighbors = graph.get(starting);
+    if (neighbors != null) {
+        for (int neighbor : neighbors) {
+            // Recursively collect values from the neighbor and add them to the current list.
+            values.addAll(sortedReachableHelper(graph, neighbor, visited));
+        }
+    }
+    
+    return values;
+}
 
   /**
    * Returns true if and only if it is possible both to reach v2 from v1 and to reach v1 from v2.
@@ -80,6 +153,30 @@ public class Practice {
    * @return true if there is a two-way connection between v1 and v2, false otherwise
    */
   public static <T> boolean twoWay(Vertex<T> v1, Vertex<T> v2) {
+    Set<Vertex<T>> visited = new HashSet<>();
+    boolean forward =  twoWayHelper (v1, v2, visited);
+    Set<Vertex<T>> visited2 = new HashSet<>();
+    boolean backward = twoWayHelper(v2,v1,visited2);
+
+    return forward && backward;
+
+  }
+
+  public static <T> boolean twoWayHelper(Vertex<T> v1, Vertex<T> v2, Set<Vertex<T>> visited){
+    if(v1 == null || v2 == null) return false;
+
+    if(v1.equals(v2))return true;
+
+    visited.add(v1);
+
+    if(v1.neighbors != null){
+      for(var neighbor : v1.neighbors){
+        if(!visited.contains(neighbor) && twoWayHelper(neighbor, v2, visited)){
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 
@@ -96,6 +193,32 @@ public class Practice {
    * @return whether there exists a valid positive path from starting to ending
    */
   public static boolean positivePathExists(Map<Integer, Set<Integer>> graph, int starting, int ending) {
+    Set<Integer> visited = new HashSet<>();
+  
+    return positivePathExistsHelper(graph, starting, ending, visited);
+  }
+
+  public static boolean positivePathExistsHelper(Map<Integer, Set<Integer>> graph, int starting, int ending, Set<Integer> visited){
+    if(starting <= 0 || ending <= 0) return false;
+    if (!graph.containsKey(starting) || !graph.containsKey(ending)) return false;
+
+    if(starting == ending) return true;
+
+
+    visited.add(starting);
+
+    Set<Integer> neighbors = graph.get(starting);
+    if(neighbors != null){
+      for(var neighbor : neighbors){
+
+        if(neighbor > 0 && !visited.contains(neighbor)){
+          if(positivePathExistsHelper(graph, neighbor, ending, visited)){
+            return true;
+          }
+        }
+        }
+
+      }
     return false;
   }
 
@@ -109,6 +232,30 @@ public class Practice {
    * @return true if a person in the extended network works at the specified company, false otherwise
    */
   public static boolean hasExtendedConnectionAtCompany(Professional person, String companyName) {
+    Set<Professional> visited = new HashSet<>();
+    return hasExtendedConnectionAtCompanyHelper(person, companyName, visited);
+  }
+
+  public static boolean hasExtendedConnectionAtCompanyHelper(Professional person, String companyName, Set<Professional> visited){
+    if(person == null) return false;
+    if(visited.contains(person)) return false;
+
+    visited.add(person);
+
+    if(companyName.equals(person.getCompany())){
+      return true;
+
+    }
+
+    for(var neighbor : person.getConnections()){
+      if(hasExtendedConnectionAtCompanyHelper(neighbor, companyName, visited)){
+        return true;
+      }
+    }
+
+    
     return false;
   }
+
+
 }
